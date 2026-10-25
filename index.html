@@ -1249,4 +1249,74 @@ for(const k of [1,2,3])for(let j=0;j<8;j++){if(k===1&&j===1)continue;const m=mak
 const water=new THREE.Group();scene.add(water);
 const blue=new THREE.MeshStandardMaterial({color:0x3898ff});
 for(let i=0;i<8;i++){const a=Xp(2,i),b=Xp(2,i+1);a.multiplyScalar(1.32);b.multiplyScalar(1.32);a.y=b.y=(Z[2]+Z[3])/2;water.add(tube(a,b,0.025,blue));}
-for(let i=0;i<8;i++){const th=(i+0.5)*Math.PI/4;const r=0.785*1.3;
+for(let i=0;i<8;i++){const th=(i+0.5)*Math.PI/4;const r=0.785*1.3;const p=new THREE.Vector3(r*Math.cos(th),0.02,r*Math.sin(th));const q=new THREE.Vector3(r*Math.cos(th+Math.PI/4),0.02,r*Math.sin(th+Math.PI/4));water.add(tube(p,q,0.03,blue));}
+const drops=[];for(let j=0;j<8;j++){const th=(j+0.5)*Math.PI/4;for(let n=0;n<3;n++){const d=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),blue);d.userData={th:th,ph:n/3};water.add(d);drops.push(d);}}
+water.visible=false;
+const caps={1:'La celda R (naranja) es el rombo partido por el anillo: el tubo horizontal resaltado la divide en dos triángulos. La cometa K (morada) va de nodo a nodo en la esquina y nada la atraviesa: por ahí pasa una jaba romboidal entera.',2:'El módulo llega desde el pasillo un poco más alto que el anillo, mete sus dos lengüetas por los triángulos y baja hasta que la silla de neopreno descansa sobre el tubo. Queda colgado por gravedad con traba sísmica.',3:'Por dentro (botija): cáscara exterior de terracota, arena húmeda, cáscara interior y la cavidad con el producto agrícola. El agua humedece la arena; al evaporarse enfría la cavidad de forma pasiva.',4:'Todos los nichos comparten el mismo marco. Cambia el inserto: botija cerámica en A2 y A3 (venta N1, con riego) y pirhua de caña en A4 (reserva seca). El canal azul riega en cascada y el sobrante cae a la canaleta del zócalo.'};
+
+const stepMeta={
+  1:{
+    badge:'SECCIÓN 01 / GEOMETRÍA DE LA CELDA Y COMETA K',
+    title:'Especificaciones · Geometría Reglada',
+    specs:[
+      ['Celda Rombo R (filas 1–9)','Libre 0.45–0.50 × 0.56–0.63 m'],
+      ['Cometa K (esquina)','Paso libre para Jaba Romboidal']
+    ]
+  },
+  2:{
+    badge:'SECCIÓN 02 / MONTAJE POR GRAVEDAD Y TRABA SÍSMICA',
+    title:'Especificaciones · Marco Nicho Romboidal',
+    specs:[
+      ['Apoyo sobre anillo Ø 6"','Silla en V con neopreno (5 mm)'],
+      ['Lengüeta inferior','Caja acero galv. 3 mm + uña'],
+      ['Seguridad antisísmica','Eslinga al nodo + tirador interno']
+    ]
+  },
+  3:{
+    badge:'SECCIÓN 03 / CONSERVACIÓN HIGROTÉRMICA PASIVA',
+    title:'Especificaciones · Enfriamiento Evaporativo',
+    specs:[
+      ['Inserto intercambiable','Doble cáscara cerámica (Botija)'],
+      ['Núcleo térmico','Cámara de arena húmeda por goteo'],
+      ['Alcance normativo','Frutas, verduras y tubérculos']
+    ]
+  },
+  4:{
+    badge:'SECCIÓN 04 / FUNCIONAMIENTO DEL ÁRBOL-TAMBO',
+    title:'Especificaciones · Ciclo Hidráulico y Reserva',
+    specs:[
+      ['Niveles A2 y A3 (+1.32 / +2.21)','Botija cerámica · Venta N1'],
+      ['Nivel A4 (+3.11)','Pirhua de caña · Reserva seca'],
+      ['Época de huaicos (Ene–Mar)','Captación pluvial + reserva días']
+    ]
+  }
+};
+
+const views={1:[[1.55,1.35,2.85],[0.29,0.9,0.7]],2:[[1.9,1.5,3.3],[0.35,0.9,0.85]],3:[[1.3,1.2,2.4],[0.33,0.88,0.8]],4:[[3.0,2.6,6.4],[0,1.9,0]]};
+let step=1,t0=0,camFrom=null,camTo=null,tgFrom=null,tgTo=null,ct=1;
+function go(s){step=s;
+ for(let i=1;i<=4;i++){
+   const b1=document.getElementById('s'+i);if(b1)b1.classList.toggle('on',i===s);
+   const b2=document.getElementById('sm'+i);if(b2)b2.classList.toggle('on',i===s);
+ }
+ document.getElementById('cap').textContent=caps[s];
+ const meta=stepMeta[s];
+ if(meta){
+   document.getElementById('step-badge').textContent=meta.badge;
+   document.getElementById('spec-title').textContent=meta.title;
+   document.getElementById('spec-list').innerHTML=meta.specs.map(r=>`<li><span>${r[0]}</span> <strong>${r[1]}</strong></li>`).join('');
+ }
+ hi.visible=(s===1);feat.g.visible=(s>=2);feat.inner.visible=(s===3);feat.shellM.opacity=(s===3?0.18:1);feat.shellM.depthWrite=(s!==3);
+ all.forEach(m=>m.g.visible=(s===4));water.visible=(s===4);
+ t0=performance.now();camFrom=cam.position.clone();tgFrom=ctl.target.clone();camTo=new THREE.Vector3(...views[s][0]);tgTo=new THREE.Vector3(...views[s][1]);ct=0;}
+cam.position.set(...views[1][0]);ctl.target.set(...views[1][1]);ctl.update();
+function anim(now){requestAnimationFrame(anim);
+ if(ct<1){ct=Math.min(1,(now-t0)/900);const e=ct*ct*(3-2*ct);cam.position.lerpVectors(camFrom,camTo,e);ctl.target.lerpVectors(tgFrom,tgTo,e);}
+ if(step===2){const u=Math.min(1,((now-t0)/2600)%1.6);if(u<0.55){feat.mv.position.set(0,0.2,0.9*(1-u/0.55));}else{const v=Math.min(1,(u-0.55)/0.35);feat.mv.position.set(0,0.2*(1-v),0);}}else{feat.mv.position.set(0,0,0);}
+ if(step===4){drops.forEach(d=>{const p=(now/2600+d.userData.ph)%1;const r=0.785+0.27;d.position.set(r*Math.cos(d.userData.th),2.15-p*2.1,r*Math.sin(d.userData.th));});}
+ ctl.update();renderer.render(scene,cam);}
+go(1);requestAnimationFrame(anim);
+window.addEventListener('resize',()=>{const w=W.clientWidth,h=getH();renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();});
+  </script>
+</body>
+</html>
